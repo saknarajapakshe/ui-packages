@@ -14,7 +14,7 @@ The goal of this doc is to help the team pick a direction (or the hybrid).
 ## TL;DR
 
 |                               | A — Declarative `x-search`                         | B — Service hook                                       |
-|-------------------------------|----------------------------------------------------|--------------------------------------------------------|
+| ----------------------------- | -------------------------------------------------- | ------------------------------------------------------ |
 | Who fetches data              | The control                                        | A consumer-registered service                          |
 | Who owns pagination           | The control (offset/cursor/none modes)             | The service (opaque token)                             |
 | Add a new search field        | **Backend only** — emit schema, no frontend change | **Frontend deploy** — register a service               |
