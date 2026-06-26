@@ -1,0 +1,111 @@
+name: Release - Publish @opennsw package
+
+# Publishes any package under packages/ to the npm registry when a release tag
+# is pushed. The package is derived from the tag, so one workflow serves every
+# package in the monorepo.
+#
+# Tag convention: <package-dir>-v<semver>
+#   - <package-dir> is the folder name under packages/
+#   - <semver> must match the "version" in that package's package.json
+#
+# How to cut a release:
+#   1. Bump "version" in packages/<package-dir>/package.json and merge to main.
+#   2. Tag that commit and push the tag, e.g.:
+#        git tag jsonforms-renderers-v0.3.1
+#        git push origin jsonforms-renderers-v0.3.1
+#   3. This workflow resolves the package from the tag, verifies the version,
+#      builds, and publishes.
+#
+# Authentication: npm Trusted Publishing via GitHub OIDC — no NPM_TOKEN secret.
+# One-time setup per package on npmjs.com: open the package's Settings ->
+# Trusted Publisher and register GitHub Actions with this repo and workflow file
+# `release.yml`. `id-token: write` + a recent npm CLI also attach build
+# provenance (the verified badge on npmjs.com).
+
+on:
+  push:
+    tags:
+      - '*-v*.*.*'
+
+# Don't run two publishes of the same tag concurrently.
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build and publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC trusted publishing + provenance signing
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+        with:
+          version: 11.1.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.18.0'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+          cache-dependency-path: './pnpm-lock.yaml'
+
+      # Trusted Publishing / OIDC requires npm CLI >= 11.5.1. The npm bundled
+      # with Node 22.18 is older, so upgrade it before publishing.
+      - name: Upgrade npm (OIDC trusted publishing support)
+        run: npm install --global npm@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Resolve the package directory and name from the tag, and fail early if
+      # the tag version doesn't match the committed package.json version.
+      - name: Resolve package from tag
+        id: pkg
+        run: |
+          TAG="$GITHUB_REF_NAME"
+          if [[ ! "$TAG" =~ ^(.+)-v([0-9]+\.[0-9]+\.[0-9]+.*)$ ]]; then
+            echo "::error::Tag '$TAG' must match '<package-dir>-v<semver>', e.g. jsonforms-renderers-v0.3.1."
+            exit 1
+          fi
+          PKG_DIR="${BASH_REMATCH[1]}"
+          TAG_VERSION="${BASH_REMATCH[2]}"
+          PKG_PATH="packages/$PKG_DIR"
+          if [ ! -f "$PKG_PATH/package.json" ]; then
+            echo "::error::No package.json found at $PKG_PATH (derived from tag '$TAG')."
+            exit 1
+          fi
+          PKG_NAME="$(node -p "require('./$PKG_PATH/package.json').name")"
+          PKG_VERSION="$(node -p "require('./$PKG_PATH/package.json').version")"
+          echo "Tag:             $TAG"
+          echo "Package path:    $PKG_PATH"
+          echo "Package name:    $PKG_NAME"
+          echo "Tag version:     $TAG_VERSION"
+          echo "Package version: $PKG_VERSION"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match $PKG_PATH/package.json ($PKG_VERSION)."
+            exit 1
+          fi
+          echo "path=$PKG_PATH" >> "$GITHUB_OUTPUT"
+          echo "name=$PKG_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Type check
+        run: pnpm --filter "${{ steps.pkg.outputs.name }}" run type-check
+
+      - name: Build package
+        run: pnpm --filter "${{ steps.pkg.outputs.name }}" run build
+
+      # Sanity-check the publishable tarball (no real upload).
+      - name: Publish dry run
+        working-directory: ${{ steps.pkg.outputs.path }}
+        run: npm publish --provenance --access public --dry-run
+
+      - name: Publish to npm
+        working-directory: ${{ steps.pkg.outputs.path }}
+        run: npm publish --provenance --access public
