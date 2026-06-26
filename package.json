@@ -1,0 +1,34 @@
+{
+  "name": "opennsw-ui-packages",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "build": "pnpm --recursive run build",
+    "lint": "eslint .",
+    "type-check": "pnpm --recursive --parallel run type-check",
+    "format:check": "prettier --check .",
+    "format:fix": "prettier --write ."
+  },
+  "license": "Apache-2.0",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.1.3",
+      "onFail": "download"
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "prettier": "^3.8.4",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.46.4"
+  }
+}

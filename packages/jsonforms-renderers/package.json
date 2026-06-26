@@ -1,0 +1,73 @@
+{
+  "name": "@opennsw/jsonforms-renderers",
+  "version": "0.3.1",
+  "description": "JSONForms renderer set for OpenNSW, built on Radix Themes and React 19.",
+  "license": "Apache-2.0",
+  "keywords": [
+    "jsonforms",
+    "jsonforms-renderers",
+    "react",
+    "radix-ui",
+    "forms",
+    "opennsw"
+  ],
+  "homepage": "https://github.com/opennsw/nsw-npm-packages/tree/main/packages/jsonforms-renderers#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/opennsw/nsw-npm-packages.git",
+    "directory": "packages/jsonforms-renderers"
+  },
+  "bugs": {
+    "url": "https://github.com/opennsw/nsw-npm-packages/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "main": "dist/renderers.cjs.js",
+  "module": "dist/renderers.es.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/renderers.es.js",
+      "require": "./dist/renderers.cjs.js"
+    },
+    "./styles.css": "./dist/jsonforms-renderers.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "type-check": "tsc -b --noEmit"
+  },
+  "peerDependencies": {
+    "@jsonforms/core": "^3.2.1",
+    "@jsonforms/react": "^3.2.1",
+    "@radix-ui/react-icons": "^1.3.2",
+    "@radix-ui/themes": "^3.2.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.9",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "tailwindcss": "^4.0.9",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0",
+    "vite-plugin-dts": "^4.5.0"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.21"
+  }
+}
